@@ -1,0 +1,228 @@
+{
+  "main": {
+    "id": "49cccd354c6b8edc",
+    "type": "split",
+    "children": [
+      {
+        "id": "fddbbe3676de1a4b",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "a9e563ad0fefb7f8",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "MongoDB and the Document Model.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "MongoDB and the Document Model"
+            }
+          },
+          {
+            "id": "e781a25b959ca39a",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Questions (VI).md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Questions (VI)"
+            }
+          },
+          {
+            "id": "5d72c20808d83944",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Connecting to a MongoDB Database Using the MongoDB Shell.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Connecting to a MongoDB Database Using the MongoDB Shell"
+            }
+          }
+        ],
+        "currentTab": 2
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "a895efc865fe50c5",
+    "type": "split",
+    "children": [
+      {
+        "id": "8f5ba127ad4c4e64",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "ef6e26fb76791cae",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "acf0438faaa84e0b",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "7847faca69b25f33",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "b94304d653c36119",
+    "type": "split",
+    "children": [
+      {
+        "id": "a5be9920ec882bac",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "7bfec21b7bab44d9",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Connecting to a MongoDB Database Using the MongoDB Shell.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for Connecting to a MongoDB Database Using the MongoDB Shell"
+            }
+          },
+          {
+            "id": "e820fae5cb79e4d8",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Connecting to a MongoDB Database Using the MongoDB Shell.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from Connecting to a MongoDB Database Using the MongoDB Shell"
+            }
+          },
+          {
+            "id": "d8175e2d64be93bd",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "981152393138ebd9",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "d53d28bf415a4113",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Connecting to a MongoDB Database Using the MongoDB Shell.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of Connecting to a MongoDB Database Using the MongoDB Shell"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "5d72c20808d83944",
+  "lastOpenFiles": [
+    "Questions (VI).md",
+    "Connecting to a MongoDB Database Using the MongoDB Shell.md",
+    "MongoDB and the Document Model.md",
+    "Untitled.canvas",
+    "MongoDB Replication.md",
+    "Mongodb Sharding.md",
+    "Atlas Overview.md",
+    "MongoDB Architecture Overview.md",
+    "Mongodb.md",
+    "Welcome.md"
+  ]
+}
