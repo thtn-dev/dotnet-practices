@@ -1,5 +1,6 @@
 using MongoDB.Bson.Serialization.Attributes;
-namespace MongoDbAssociate.Entities;
+
+namespace MongoDbAssociate.Entities.SampleAirbnb;
 [BsonIgnoreExtraElements]
 public class Listing
 {
@@ -263,7 +264,7 @@ public class ReviewScores
     [BsonElement("review_scores_rating")]
     public int ReviewScoresRating { get; set; }
 }
-
+[BsonIgnoreExtraElements] 
 public class Review
 {
     [BsonElement("_id")]

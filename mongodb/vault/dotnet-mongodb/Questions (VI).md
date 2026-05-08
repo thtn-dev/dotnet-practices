@@ -23,18 +23,18 @@
 
 **Q1.** MongoDB BSON hỗ trợ những kiểu dữ liệu nào sau đây? _(Chọn tất cả đáp án đúng)_
 
-- [ ] A. String
-- [ ] B. Integer (32-bit & 64-bit)
-- [ ] C. Double
-- [ ] D. Boolean
-- [ ] E. Date
-- [ ] F. ObjectId
-- [ ] G. Array
-- [ ] H. Embedded Document (Object)
-- [ ] I. Null
-- [ ] J. Binary Data
-- [ ] K. Regular Expression
-- [ ] L. Decimal128
+- [x] A. String
+- [x] B. Integer (32-bit & 64-bit)
+- [x] C. Double
+- [x] D. Boolean
+- [x] E. Date
+- [x] F. ObjectId
+- [x] G. Array
+- [x] H. Embedded Document (Object)
+- [x] I. Null
+- [x] J. Binary Data
+- [x] K. Regular Expression
+- [x] L. Decimal128
 
 <details> <summary>💡 Đáp án</summary>
 
@@ -50,7 +50,7 @@ BSON (Binary JSON) là định dạng nhị phân MongoDB sử dụng để lưu
 
 - [ ] A. String
 - [ ] B. Integer
-- [ ] C. ObjectId
+- [x] C. ObjectId
 - [ ] D. UUID
 
 <details> <summary>💡 Đáp án</summary>
@@ -74,7 +74,7 @@ Nếu không chỉ định `_id`, MongoDB sẽ tự động tạo một giá tr�
 ```
 
 - [ ] A. Không, vì các document phải có cùng schema
-- [ ] B. Có, vì MongoDB là schema-flexible (không yêu cầu schema cố định)
+- [x] B. Có, vì MongoDB là schema-flexible (không yêu cầu schema cố định)
 - [ ] C. Không, vì document thứ 3 thiếu trường `name`
 - [ ] D. Có, nhưng cần phải khai báo schema trước
 

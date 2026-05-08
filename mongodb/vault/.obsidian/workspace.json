@@ -1,0 +1,196 @@
+{
+  "main": {
+    "id": "a88fcaa4f1935cb9",
+    "type": "split",
+    "children": [
+      {
+        "id": "e61c314f7c808c42",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "60bd5a7764e19224",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "dotnet-mongodb/Questions (VI).md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Questions (VI)"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "d2d30cb86e51a232",
+    "type": "split",
+    "children": [
+      {
+        "id": "241697f418284594",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "9cfe176470709115",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "dd893ea01363e520",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "257eb3c1506ef673",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "82a2215e6144ba06",
+    "type": "split",
+    "children": [
+      {
+        "id": "f5e22cf0545a4730",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "a141c93e724202d3",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "dotnet-mongodb/Questions (VI).md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for Questions (VI)"
+            }
+          },
+          {
+            "id": "4893102ae14b9458",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "dotnet-mongodb/Questions (VI).md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from Questions (VI)"
+            }
+          },
+          {
+            "id": "02d6a02faba24ebb",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "80cc8fa823638a1d",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "a410d0e0baac599b",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "dotnet-mongodb/Questions (VI).md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of Questions (VI)"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "60bd5a7764e19224",
+  "lastOpenFiles": [
+    "dotnet-mongodb/Connecting to a MongoDB Database Using the MongoDB Shell.md",
+    "dotnet-mongodb/Mongodb Sharding.md",
+    "dotnet-mongodb/Mongodb.md",
+    "dotnet-mongodb/MongoDB and the Document Model.md",
+    "dotnet-mongodb/MongoDB Replication.md",
+    "dotnet-mongodb/Questions (VI).md",
+    "dotnet-mongodb/Atlas Overview.md"
+  ]
+}
