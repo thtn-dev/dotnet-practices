@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/Streaming/">
+    <Project Path="RabbitMqPractices.Stream.Consumer/RabbitMqPractices.Stream.Consumer.csproj" />
+    <Project Path="RabbitMqPractices.Stream.Producer/RabbitMqPractices.Stream.Producer.csproj" />
+  </Folder>
+  <Project Path="RabbitMqPractices.Shared/RabbitMqPractices.Shared.csproj" />
+</Solution>
