@@ -3,5 +3,11 @@
     <Project Path="RabbitMqPractices.Stream.Consumer/RabbitMqPractices.Stream.Consumer.csproj" />
     <Project Path="RabbitMqPractices.Stream.Producer/RabbitMqPractices.Stream.Producer.csproj" />
   </Folder>
+  <Folder Name="/SuperStream/">
+    <File Path="README.md" />
+    <Project Path="src/MetaWebhook.Shared/MetaWebhook.Shared.csproj" />
+    <Project Path="src/MetaWebhookPublisher.Console/MetaWebhookPublisher.Console.csproj" />
+    <Project Path="src/MetaWebhookSubscriber.Console/MetaWebhookSubscriber.Console.csproj" />
+  </Folder>
   <Project Path="RabbitMqPractices.Shared/RabbitMqPractices.Shared.csproj" />
 </Solution>

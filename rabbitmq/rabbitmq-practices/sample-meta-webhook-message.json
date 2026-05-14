@@ -1,0 +1,50 @@
+{
+  "object": "page",
+  "entry": [
+    {
+      "id": "PAGE_100001",
+      "time": 1736928000000,
+      "messaging": [
+        {
+          "sender": {
+            "id": "USER_000001"
+          },
+          "recipient": {
+            "id": "PAGE_100001"
+          },
+          "timestamp": 1736928000001,
+          "message": {
+            "mid": "m_USER_000001_000001",
+            "text": "Tôi muốn mua áo size M."
+          }
+        },
+        {
+          "sender": {
+            "id": "USER_000002"
+          },
+          "recipient": {
+            "id": "PAGE_100001"
+          },
+          "timestamp": 1736928000002,
+          "message": {
+            "mid": "m_USER_000002_000001",
+            "text": "Shop còn hàng không?"
+          }
+        },
+        {
+          "sender": {
+            "id": "USER_000001"
+          },
+          "recipient": {
+            "id": "PAGE_100001"
+          },
+          "timestamp": 1736928000003,
+          "message": {
+            "mid": "m_USER_000001_000002",
+            "text": "Tôi ở Hà Nội, ship mất bao lâu?"
+          }
+        }
+      ]
+    }
+  ]
+}
