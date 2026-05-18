@@ -32,7 +32,6 @@ var pendingConfirms = new ConcurrentDictionary<string, TaskCompletionSource<Conf
 var producer = await Producer.Create(new ProducerConfig(streamSystem, rabbitMqOptions.SuperStreamName)
 {
     ClientProvidedName = $"meta-webhook-publisher-{Environment.MachineName}",
-    Reference = $"meta-webhook-publisher-{Guid.NewGuid():N}",
     MaxInFlight = 10_000,
     SuperStreamConfig = new SuperStreamConfig
     {
@@ -82,7 +81,7 @@ try
                 CorrelationId = correlationId,
                 ContentType = "application/json",
                 CreationTime = DateTime.UtcNow
-            }
+            },
         };
 
         var confirm = new TaskCompletionSource<ConfirmationStatus>(TaskCreationOptions.RunContinuationsAsynchronously);
