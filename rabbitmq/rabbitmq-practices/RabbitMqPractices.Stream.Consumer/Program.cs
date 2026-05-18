@@ -39,10 +39,11 @@ var consumer = await Consumer.Create(new ConsumerConfig(streamSystem, "nathan-te
     OffsetSpec = new OffsetTypeFirst(),
     MessageHandler = async (stream, consumer, context, message) =>
     {
-        var bytes = new byte[message.Data.Contents.Length];
-        message.Data.Contents.CopyTo(bytes);
-        var messageBody = Encoding.UTF8.GetString(bytes);
-        
+        // var bytes = new byte[message.Data.Contents.Length];
+        // message.Data.Contents.CopyTo(bytes);
+        // var messageBody = Encoding.UTF8.GetString(bytes);
+
+        var messageBody = Encoding.UTF8.GetString(message.Data.Contents.ToArray());
         var payload = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(messageBody);
         
         Console.WriteLine($"Received: {payload.GetProperty("test").GetString()} " +

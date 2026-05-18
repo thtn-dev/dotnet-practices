@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/DLQ/">
+    <Project Path="DLQ/RabbitMqPractices.DLQ/RabbitMqPractices.DLQ.csproj" Id="8129b925-e669-46d6-9a3e-8f7f4e2269f1" />
+  </Folder>
   <Folder Name="/Streaming/">
     <Project Path="RabbitMqPractices.Stream.Consumer/RabbitMqPractices.Stream.Consumer.csproj" />
     <Project Path="RabbitMqPractices.Stream.Producer/RabbitMqPractices.Stream.Producer.csproj" />
