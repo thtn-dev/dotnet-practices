@@ -15,16 +15,10 @@ public interface IMessagePublisher
 }
 
 
-public sealed class MessagePublisher : IMessagePublisher, IAsyncDisposable
+public sealed class MessagePublisher(IRabbitMQConnection conn, ILogger<MessagePublisher> logger)
+    : IMessagePublisher, IAsyncDisposable
 {
-    private readonly IChannel _channel;
-    private readonly ILogger<MessagePublisher> _logger;
-
-    public MessagePublisher(IRabbitMQConnection conn, ILogger<MessagePublisher> logger)
-    {
-        _logger = logger;
-        _channel = conn.CreateConfirmChannel().GetAwaiter().GetResult();
-    }
+    private readonly IChannel _channel = conn.CreateConfirmChannel().GetAwaiter().GetResult();
 
     public async Task Publish(OrderMessage message, CancellationToken ct = default)
     {
@@ -53,7 +47,7 @@ public sealed class MessagePublisher : IMessagePublisher, IAsyncDisposable
             body: body,
             cancellationToken: cts.Token);
 
-        _logger.LogInformation("📤 Published: {Message}", message);
+        logger.LogInformation("📤 Published: {Message}", message);
     }
 
     public async Task PublishBatch(IEnumerable<OrderMessage> messages, CancellationToken ct = default)
@@ -85,7 +79,7 @@ public sealed class MessagePublisher : IMessagePublisher, IAsyncDisposable
                 cancellationToken: cts.Token);
         }
 
-        _logger.LogInformation("📤 Batch published successfully.");
+        logger.LogInformation("📤 Batch published successfully.");
     }
 
     public ValueTask DisposeAsync() => _channel.DisposeAsync();

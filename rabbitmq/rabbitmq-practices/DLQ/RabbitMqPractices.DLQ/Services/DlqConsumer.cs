@@ -9,25 +9,11 @@ using System.Text;
 
 namespace RabbitMqPractices.DLQ.Services;
 
-/// <summary>
-/// Consumes messages from the Dead Letter Queue.
-/// You can use this to:
-///   - Log / alert on failed messages
-///   - Store them in DB for manual reprocessing
-///   - Trigger recovery workflows
-/// </summary>
-public sealed class DlqConsumer : IAsyncDisposable
+public sealed class DlqConsumer(
+    IRabbitMQConnection conn,
+    ILogger<DlqConsumer> logger) : IAsyncDisposable
 {
-    private readonly IChannel _channel;
-    private readonly ILogger<DlqConsumer> _logger;
-
-    public DlqConsumer(
-        IRabbitMQConnection conn,
-        ILogger<DlqConsumer> logger)
-    {
-        _logger = logger;
-        _channel = conn.CreateChannel().GetAwaiter().GetResult();
-    }
+    private readonly IChannel _channel = conn.CreateChannel().GetAwaiter().GetResult();
 
     public async Task Start(CancellationToken ct = default)
     {
@@ -48,7 +34,7 @@ public sealed class DlqConsumer : IAsyncDisposable
             consumer: consumer,
             cancellationToken: ct);
 
-        _logger.LogWarning(
+        logger.LogWarning(
             "☠️ DLQ Consumer started on queue '{Queue}'.",
             RabbitMQConstants.DlqQueue);
 
@@ -58,7 +44,7 @@ public sealed class DlqConsumer : IAsyncDisposable
         }
         catch (TaskCanceledException)
         {
-            _logger.LogInformation("🛑 DLQ Consumer stopping.");
+            logger.LogInformation("🛑 DLQ Consumer stopping.");
         }
     }
 
@@ -76,7 +62,7 @@ public sealed class DlqConsumer : IAsyncDisposable
 
             var deathInfo = GetDeathInfo(ea.BasicProperties);
 
-            _logger.LogError(
+            logger.LogError(
                 """
                 💀 DLQ message received.
                    OrderId    : {OrderId}
@@ -103,7 +89,7 @@ public sealed class DlqConsumer : IAsyncDisposable
         }
         catch (Exception ex)
         {
-            _logger.LogError(
+            logger.LogError(
                 ex,
                 "Error processing DLQ message – discarding.");
 
@@ -123,24 +109,20 @@ public sealed class DlqConsumer : IAsyncDisposable
         {
             if (props.Headers != null &&
                 props.Headers.TryGetValue("x-death", out var deathObj) &&
-                deathObj is IList<object> deaths &&
-                deaths.Count > 0)
+                deathObj is IList<object> { Count: > 0 } deaths)
             {
-                var death = deaths[0] as Dictionary<string, object>;
-
-                if (death is not null)
+                if (deaths[0] is Dictionary<string, object> death)
                 {
+                    var reasonObj = death.GetValueOrDefault("reason");
+                    var reasonBytes = reasonObj as byte[] ?? [];
+                    var reason = Encoding.UTF8.GetString(reasonBytes);
+                    
+                    var queueObj  = death.GetValueOrDefault("queue");
+                    var  queueBytes = queueObj as byte[] ?? [];
+                    var  queue = Encoding.UTF8.GetString(queueBytes);
                     return (
-                        Reason:
-                            death.TryGetValue("reason", out var r)
-                                ? r?.ToString() ?? "unknown"
-                                : "unknown",
-
-                        Queue:
-                            death.TryGetValue("queue", out var q)
-                                ? q?.ToString() ?? "unknown"
-                                : "unknown",
-
+                        Reason: reason,
+                        Queue: queue,
                         Count:
                             death.TryGetValue("count", out var c) && c is long l
                                 ? l

@@ -9,18 +9,12 @@ using System.Text;
 
 namespace RabbitMqPractices.DLQ.Services;
 
-public sealed class MessageConsumer : IAsyncDisposable
+public sealed class MessageConsumer(
+    IRabbitMQConnection conn,
+    ILogger<MessageConsumer> logger)
+    : IAsyncDisposable
 {
-    private readonly IChannel _channel;
-    private readonly ILogger<MessageConsumer> _logger;
-
-    public MessageConsumer(
-        IRabbitMQConnection conn,
-        ILogger<MessageConsumer> logger)
-    {
-        _logger = logger;
-        _channel = conn.CreateChannel().GetAwaiter().GetResult();
-    }
+    private readonly IChannel _channel = conn.CreateChannel().GetAwaiter().GetResult();
 
     public async Task Start(CancellationToken ct = default)
     {
@@ -41,7 +35,7 @@ public sealed class MessageConsumer : IAsyncDisposable
             consumer: consumer,
             cancellationToken: ct);
 
-        _logger.LogInformation(
+        logger.LogInformation(
             "👂 Consumer started on queue '{Queue}'. Waiting for messages…",
             RabbitMQConstants.MainQueue);
 
@@ -51,7 +45,7 @@ public sealed class MessageConsumer : IAsyncDisposable
         }
         catch (TaskCanceledException)
         {
-            _logger.LogInformation("🛑 Consumer stopping.");
+            logger.LogInformation("🛑 Consumer stopping.");
         }
     }
 
@@ -60,17 +54,15 @@ public sealed class MessageConsumer : IAsyncDisposable
         object sender,
         BasicDeliverEventArgs ea)
     {
-        OrderMessage? message = null;
-
         try
         {
             var json = Encoding.UTF8.GetString(ea.Body.Span);
 
-            message = JsonConvert.DeserializeObject<OrderMessage>(json)
-                      ?? throw new InvalidOperationException(
-                          "Deserialization returned null.");
+            var message = JsonConvert.DeserializeObject<OrderMessage>(json)
+                          ?? throw new InvalidOperationException(
+                              "Deserialization returned null.");
 
-            _logger.LogInformation(
+            logger.LogInformation(
                 "📥 Received: {Message}",
                 message);
 
@@ -80,13 +72,13 @@ public sealed class MessageConsumer : IAsyncDisposable
                 deliveryTag: ea.DeliveryTag,
                 multiple: false);
 
-            _logger.LogInformation(
+            logger.LogInformation(
                 "✅ ACK – message {OrderId} processed.",
                 message.OrderId);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(
+            logger.LogWarning(
                 ex,
                 "⚠️ Error processing message.");
 
@@ -129,7 +121,7 @@ public sealed class MessageConsumer : IAsyncDisposable
                 deliveryTag: ea.DeliveryTag,
                 multiple: false);
 
-            _logger.LogWarning(
+            logger.LogWarning(
                 "🔄 Retry {Attempt}/{Max} scheduled.",
                 retryCount + 1,
                 RabbitMQConstants.MaxRetryCount);
@@ -142,7 +134,7 @@ public sealed class MessageConsumer : IAsyncDisposable
                 multiple: false,
                 requeue: false);
 
-            _logger.LogError(
+            logger.LogError(
                 "💀 Max retries reached. Message sent to DLQ. Error: {Error}",
                 ex.Message);
         }

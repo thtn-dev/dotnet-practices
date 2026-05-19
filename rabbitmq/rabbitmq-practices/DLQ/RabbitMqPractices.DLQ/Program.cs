@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using RabbitMqPractices.DLQ.Infrastructure;
 using RabbitMqPractices.DLQ.Models;
 using RabbitMqPractices.DLQ.Services;
@@ -29,7 +28,6 @@ services.AddTransient<DlqConsumer>();
 await using var provider = services.BuildServiceProvider();
 
 await provider.GetRequiredService<QueueTopology>().DeclareAll();
-var rabbitMqSettings = provider.GetRequiredService<IOptions<RabbitMqOptions>>().Value;
 
 Console.WriteLine("""
  ╔══════════════════════════════════════════╗
@@ -44,9 +42,8 @@ Console.WriteLine("""
  ╚══════════════════════════════════════════╝
 """);
 
-using var cts = new CancellationTokenSource();
+var cts = new CancellationTokenSource();
 Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); };
-
 
 while (true)
 {
@@ -98,8 +95,24 @@ while (true)
             {
                 Console.WriteLine("Starting Main Consumer (Ctrl+C to stop)…");
                 var consumer = provider.GetRequiredService<MessageConsumer>();
+                var token = cts.Token;
                 // Run in background so menu stays responsive
-                await Task.Run(() => consumer.Start(cts.Token));
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await consumer.Start(token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        Console.WriteLine("Main Consumer stopped.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Main Consumer error: {ex.Message}");
+                    }
+                });
+
                 break;
             }
 
@@ -107,7 +120,22 @@ while (true)
             {
                 Console.WriteLine("Starting DLQ Consumer (Ctrl+C to stop)…");
                 var dlq = provider.GetRequiredService<DlqConsumer>();
-                await Task.Run(() => dlq.Start(cts.Token));
+                var token = cts.Token;
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await dlq.Start(token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        Console.WriteLine("DLQ Consumer stopped.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"DLQ Consumer error: {ex.Message}");
+                    }
+                });
                 break;
             }
 
