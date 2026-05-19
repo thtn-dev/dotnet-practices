@@ -7,9 +7,41 @@ services:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
     ports:
-      - "5672:5672"
-      - "5552:5552"
-      - "15672:15672"
+      - "5672:5672"      # AMQP
+      - "5552:5552"      # RabbitMQ Streams
+      - "15672:15672"    # Management UI
+      - "15692:15692"    # Prometheus metrics
     command: >
-      sh -c "rabbitmq-plugins enable --offline rabbitmq_stream rabbitmq_stream_management
+      sh -c "rabbitmq-plugins enable --offline rabbitmq_stream rabbitmq_stream_management rabbitmq_prometheus
       && rabbitmq-server"
+    networks:
+      - monitoring
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - rabbitmq
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    depends_on:
+      - prometheus
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    driver: bridge
