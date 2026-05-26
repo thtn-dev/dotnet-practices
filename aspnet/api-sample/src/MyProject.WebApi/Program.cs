@@ -1,6 +1,9 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using MyProject.WebApi;
 using MyProject.WebApi.Common;
 using MyProject.WebApi.Extensions;
 using MyProject.WebApi.Modules.Identity;
@@ -8,9 +11,21 @@ using MyProject.WebApi.Modules.Identity.Abstractions;
 using MyProject.WebApi.Modules.Identity.Services;
 using MyProject.WebApi.Services.SecretsManager;
 using Scalar.AspNetCore;
+using Serilog;
+using Serilog.Context;
 
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Host.UseSerilog((context, services, config) =>
+    config.ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext()
+);
+    
+    
 builder.Services
     .AddOptions<DopplerOptions>()
     .Bind(builder.Configuration.GetSection(nameof(DopplerOptions)))
@@ -36,6 +51,10 @@ builder.Services
     .Bind(builder.Configuration.GetSection(nameof(JwtSettings)))
     .ValidateDataAnnotations()
     .ValidateOnStart();
+
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 builder.Services.AddSingleton<IConfigureOptions<JwtSettings>, ConfigureJwtSettings>();
 // Add services to the container.
 builder.Services.AddSingleton<IRsaKeyProvider, RsaKeyProvider>();
@@ -74,7 +93,41 @@ if (app.Environment.IsDevelopment())
         foreach (var url in serverUrls) options.AddServer(new ScalarServer(url.Trim(), "Local Development"));
     });
 }
+app.UseExceptionHandler(o =>
+{
+    o.Run(async context =>
+    {
+        var exceptionFeature = context.Features.Get<IExceptionHandlerFeature>();
+        if (exceptionFeature is null) return;
 
+        var handler = context.RequestServices.GetRequiredService<GlobalExceptionHandler>();
+        await handler.TryHandleAsync(context, exceptionFeature.Error, CancellationToken.None);
+    });
+});
+app.Use(async (context, next) =>
+{
+    var traceId = Activity.Current?.TraceId.ToString()
+                  ?? context.TraceIdentifier;
+
+    using (LogContext.PushProperty("TraceId", traceId))
+    {
+        await next();
+    }
+});
+
+app.UseSerilogRequestLogging(options =>
+{
+    options.MessageTemplate =
+        "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000}ms | TraceId: {TraceId}";
+
+    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+    {
+        diagnosticContext.Set("TraceId",
+            Activity.Current?.TraceId.ToString() ?? httpContext.TraceIdentifier);
+        diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+        diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent);
+    };
+});
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -90,7 +143,12 @@ app.MapGet("/", () => Results.Ok(ApiResponse<string>.Ok("Hello world!")))
 
 app.MapPost("/auth/login", (IJwtService jwtService) =>
     {
-
+        var rnd = new Random();
+        var randomNum = rnd.Next(1000, 9999);
+        if (randomNum % 2 == 0)
+        {
+            throw new ConflictException("Simulated login failure: even random number");
+        }
         var token = jwtService.GenerateToken(
             userId: "16112001",
             username: "nathan",

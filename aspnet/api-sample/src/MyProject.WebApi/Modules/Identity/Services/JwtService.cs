@@ -7,7 +7,7 @@ using MyProject.WebApi.Modules.Identity.Abstractions;
 
 namespace MyProject.WebApi.Modules.Identity.Services;
 
-public class JwtService(IRsaKeyProvider keyProvider, IOptions<JwtSettings> options) : IJwtService
+public class JwtService(IRsaKeyProvider keyProvider, ILogger<JwtService> logger, IOptions<JwtSettings> options) : IJwtService
 {
     private readonly JwtSettings _settings = options.Value;
 
@@ -17,6 +17,8 @@ public class JwtService(IRsaKeyProvider keyProvider, IOptions<JwtSettings> optio
         List<string> roles,
         List<Claim>? customClaims = null)
     {
+        logger.LogInformation("Generating JWT for user {UserId} with roles: {Roles}",
+            userId, string.Join(", ", roles));
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, userId),
