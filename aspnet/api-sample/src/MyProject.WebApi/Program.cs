@@ -1,14 +1,38 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Options;
 using MyProject.WebApi.Common;
 using MyProject.WebApi.Extensions;
+using MyProject.WebApi.Modules.Identity;
+using MyProject.WebApi.Modules.Identity.Abstractions;
+using MyProject.WebApi.Modules.Identity.Services;
+using MyProject.WebApi.Services.SecretsManager;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Services
+    .AddOptions<DopplerOptions>()
+    .Bind(builder.Configuration.GetSection(nameof(DopplerOptions)))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 
+var dopplerOptions = builder.Configuration.GetSection(nameof(DopplerOptions)).Get<DopplerOptions>()!;
+
+var dopplerSecrets = await DopplerClient.GetSecretsAsync(
+    dopplerOptions.DopplerToken,
+    dopplerOptions.ProjectName,
+    dopplerOptions.ConfigName
+);
+var jwtSettings = builder.Configuration.GetSection(nameof(JwtSettings)).Get<JwtSettings>()!;
+jwtSettings.PrivateKey = dopplerSecrets.JwtPrivateKey ?? "";
+jwtSettings.PublicKey = dopplerSecrets.JwtPublicKey ?? "";
+
+// Add services to the container.
+builder.Services.AddSingleton<IRsaKeyProvider, RsaKeyProvider>();
+builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddSingleton(Options.Create(jwtSettings));
+builder.Services.AddSingleton(Options.Create(dopplerSecrets));
 builder.Services.ConfigureOpenApi();
 builder.Services.AddAuthentication(options =>
     {
@@ -16,20 +40,10 @@ builder.Services.AddAuthentication(options =>
         options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
         options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
     })
-    .AddJwtBearer(options =>
-    {
-        options.MapInboundClaims = false;
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = "webapi",
-            ValidAudience = "webapi",
-            IssuerSigningKey = new SymmetricSecurityKey("example-api-secret-key"u8.ToArray())
-        };
-    });
+    .AddJwtBearer();
+
+builder.Services.AddSingleton<IConfigureOptions<JwtBearerOptions>, ConfigureJwtBearerOptions>();
+builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddAuthorization();
 var app = builder.Build();
 
@@ -67,5 +81,5 @@ app.MapGet("/", () => Results.Ok(ApiResponse<string>.Ok("Hello world!")))
     .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
     .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
     .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
-
 app.Run();
+
