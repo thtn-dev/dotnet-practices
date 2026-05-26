@@ -19,4 +19,10 @@ public sealed class DopplerSecrets
             JwtPublicKey = response.Secrets.TryGetValue("JWT_PUBLIC_KEY", out var jwtPublicKey) ? jwtPublicKey.Computed ?? jwtPublicKey.Raw : null
         };
     }
+    
+    public void CopyTo(DopplerSecrets target)
+    {
+        target.JwtPrivateKey = JwtPrivateKey;
+        target.JwtPublicKey  = JwtPublicKey;
+    }
 }

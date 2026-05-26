@@ -24,15 +24,22 @@ var dopplerSecrets = await DopplerClient.GetSecretsAsync(
     dopplerOptions.ProjectName,
     dopplerOptions.ConfigName
 );
-var jwtSettings = builder.Configuration.GetSection(nameof(JwtSettings)).Get<JwtSettings>()!;
-jwtSettings.PrivateKey = dopplerSecrets.JwtPrivateKey ?? "";
-jwtSettings.PublicKey = dopplerSecrets.JwtPublicKey ?? "";
 
+builder.Services
+    .AddOptions<DopplerSecrets>()
+    .Configure(dopplerSecrets.CopyTo)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+builder.Services
+    .AddOptions<JwtSettings>()
+    .Bind(builder.Configuration.GetSection(nameof(JwtSettings)))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+builder.Services.AddSingleton<IConfigureOptions<JwtSettings>, ConfigureJwtSettings>();
 // Add services to the container.
 builder.Services.AddSingleton<IRsaKeyProvider, RsaKeyProvider>();
 builder.Services.AddScoped<IJwtService, JwtService>();
-builder.Services.AddSingleton(Options.Create(jwtSettings));
-builder.Services.AddSingleton(Options.Create(dopplerSecrets));
 builder.Services.ConfigureOpenApi();
 builder.Services.AddAuthentication(options =>
     {
@@ -43,7 +50,6 @@ builder.Services.AddAuthentication(options =>
     .AddJwtBearer();
 
 builder.Services.AddSingleton<IConfigureOptions<JwtBearerOptions>, ConfigureJwtBearerOptions>();
-builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddAuthorization();
 var app = builder.Build();
 
@@ -81,5 +87,26 @@ app.MapGet("/", () => Results.Ok(ApiResponse<string>.Ok("Hello world!")))
     .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
     .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
     .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+
+app.MapPost("/auth/login", (IJwtService jwtService) =>
+    {
+
+        var token = jwtService.GenerateToken(
+            userId: "16112001",
+            username: "nathan",
+            roles: new List<string> { "User" }
+        );
+
+        return Results.Ok(ApiResponse<string>.Ok(token));
+    })
+    .AllowAnonymous()
+    .WithSummary("User login")
+    .WithDescription("Authenticates a user and returns a JWT token.")
+    .WithTags("Authentication")
+    .Produces<ApiResponse<string>>()
+    .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+    .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
+    .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+
 app.Run();
 

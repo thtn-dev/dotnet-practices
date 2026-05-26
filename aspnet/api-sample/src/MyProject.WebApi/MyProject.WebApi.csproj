@@ -17,6 +17,7 @@
 
     <ItemGroup>
       <Folder Include="Modules\Identity\Models\" />
+      <Folder Include="Settings\" />
     </ItemGroup>
 
 </Project>
