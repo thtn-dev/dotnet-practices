@@ -14,6 +14,8 @@ using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Context;
 
+Serilog.Debugging.SelfLog.Enable(Console.Error);
+
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateBootstrapLogger();
