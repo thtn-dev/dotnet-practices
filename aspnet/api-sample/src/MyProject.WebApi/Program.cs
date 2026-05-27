@@ -154,10 +154,10 @@ app.MapPost("/auth/login", (IJwtService jwtService) =>
         var token = jwtService.GenerateToken(
             userId: "16112001",
             username: "nathan",
-            roles: new List<string> { "User" }
+            roles: ["User"]
         );
 
-        return Results.Ok(ApiResponse<string>.Ok(token));
+        return Results.Ok(ApiResponse.Ok(token));
     })
     .AllowAnonymous()
     .WithSummary("User login")
