@@ -18,28 +18,23 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.ListenLocalhost(5001, listenOptions =>
+    options.ConfigureHttpsDefaults(httpsOptions =>
     {
-        listenOptions.UseHttps(httpsOptions =>
+        httpsOptions.ServerCertificate = serverCert;
+        httpsOptions.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
+        httpsOptions.ClientCertificateValidation = (cert, chain, errors) =>
         {
-            httpsOptions.ServerCertificate = serverCert;
+            if (errors != SslPolicyErrors.None &&
+                errors != SslPolicyErrors.RemoteCertificateChainErrors)
+                return false;
 
-            httpsOptions.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
+            var chain2 = new X509Chain();
+            chain2.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
+            chain2.ChainPolicy.CustomTrustStore.Add(caCert);
+            chain2.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
 
-            httpsOptions.ClientCertificateValidation = (cert, chain, errors) =>
-            {
-                if (errors != SslPolicyErrors.None &&
-                    errors != SslPolicyErrors.RemoteCertificateChainErrors)
-                    return false;
-
-                var chain2 = new X509Chain();
-                chain2.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
-                chain2.ChainPolicy.CustomTrustStore.Add(caCert);
-                chain2.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
-
-                return chain2.Build(new X509Certificate2(cert));
-            };
-        });
+            return chain2.Build(new X509Certificate2(cert));
+        };
     });
 });
 
@@ -52,13 +47,14 @@ builder.Services.AddAuthentication(CertificateAuthenticationDefaults.Authenticat
     {
         options.AllowedCertificateTypes = CertificateTypes.All;
         options.RevocationMode = X509RevocationMode.NoCheck;
+
+        options.ChainTrustValidationMode = X509ChainTrustMode.CustomRootTrust;
+        options.CustomTrustStore.Add(caCert); 
         options.Events = new CertificateAuthenticationEvents
         {
             OnCertificateValidated = context =>
             {
-                // CN của cert chính là identity của service
                 var cn = context.ClientCertificate.GetNameInfo(X509NameType.SimpleName, false);
-                Console.WriteLine($"Request from: {cn}"); // "service-a"
 
                 var claims = new[]
                 {
@@ -82,7 +78,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseAuthentication();
 var summaries = new[]
 {
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
@@ -100,6 +96,7 @@ app.MapGet("/weatherforecast", () =>
             .ToArray();
         return forecast;
     })
+    .RequireAuthorization()
     .WithName("GetWeatherForecast");
 
 app.Run();
