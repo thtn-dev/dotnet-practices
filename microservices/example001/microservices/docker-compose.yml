@@ -1,0 +1,162 @@
+services:
+  dapr-placement:
+    image: "daprio/dapr:1.15.4"
+    command: ["./placement", "-port", "50006"]
+    networks:
+      - dapr-net
+
+  dapr-sentry:
+    image: "daprio/dapr:1.15.4"
+    command:
+      - "./sentry"
+      - "-issuer-credentials"
+      - "/certs"
+      - "-trust-domain"
+      - "public"
+    volumes:
+      - dapr_certs:/certs
+    networks:
+      - dapr-net
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Example.ApiGateway/Dockerfile
+    depends_on:
+      - api-gateway-dapr
+    network_mode: "service:api-gateway-dapr"
+
+  api-gateway-dapr:
+    image: "daprio/daprd:1.15.4"
+    command:
+      - "./daprd"
+      - "-app-id"
+      - "api-gateway"
+      - "-app-port"
+      - "5000"
+      - "-app-protocol"
+      - "http"
+      - "-dapr-http-port"
+      - "3500"
+      - "-placement-host-address"
+      - "dapr-placement:50006"
+      - "-sentry-address"
+      - "dapr-sentry:50001"
+      - "-enable-mtls"
+      - "-trust-anchors-file"
+      - "/certs/ca.crt"
+      - "-cert-chain-file"
+      - "/certs/issuer.crt"
+      - "-cert-key-file"
+      - "/certs/issuer.key"
+      - "-config"
+      - "/dapr/config.yaml"
+      - "-resources-path"
+      - "/dapr/components"
+    volumes:
+      - ./dapr/config.yaml:/dapr/config.yaml:ro
+      - ./dapr/components:/dapr/components:ro
+      - dapr_certs:/certs:ro
+    depends_on:
+      - dapr-placement
+      - dapr-sentry
+    ports:
+      - "5000:5000"
+    networks:
+      - dapr-net
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: Example.AuthService/Dockerfile
+    depends_on:
+      - auth-service-dapr
+    network_mode: "service:auth-service-dapr"
+
+  auth-service-dapr:
+    image: "daprio/daprd:1.15.4"
+    command:
+      - "./daprd"
+      - "-app-id"
+      - "auth-service"
+      - "-app-port"
+      - "5100"
+      - "-app-protocol"
+      - "http"
+      - "-dapr-http-port"
+      - "3500"
+      - "-placement-host-address"
+      - "dapr-placement:50006"
+      - "-sentry-address"
+      - "dapr-sentry:50001"
+      - "-enable-mtls"
+      - "-trust-anchors-file"
+      - "/certs/ca.crt"
+      - "-cert-chain-file"
+      - "/certs/issuer.crt"
+      - "-cert-key-file"
+      - "/certs/issuer.key"
+      - "-config"
+      - "/dapr/config.yaml"
+      - "-resources-path"
+      - "/dapr/components"
+    volumes:
+      - ./dapr/config.yaml:/dapr/config.yaml:ro
+      - ./dapr/components:/dapr/components:ro
+      - dapr_certs:/certs:ro
+    depends_on:
+      - dapr-placement
+      - dapr-sentry
+    networks:
+      - dapr-net
+
+  worker-service:
+    build:
+      context: .
+      dockerfile: Example.WorkerService/Dockerfile
+    depends_on:
+      - worker-service-dapr
+    network_mode: "service:worker-service-dapr"
+
+  worker-service-dapr:
+    image: "daprio/daprd:1.15.4"
+    command:
+      - "./daprd"
+      - "-app-id"
+      - "worker-service"
+      - "-app-port"
+      - "5088"
+      - "-app-protocol"
+      - "http"
+      - "-dapr-http-port"
+      - "3500"
+      - "-placement-host-address"
+      - "dapr-placement:50006"
+      - "-sentry-address"
+      - "dapr-sentry:50001"
+      - "-enable-mtls"
+      - "-trust-anchors-file"
+      - "/certs/ca.crt"
+      - "-cert-chain-file"
+      - "/certs/issuer.crt"
+      - "-cert-key-file"
+      - "/certs/issuer.key"
+      - "-config"
+      - "/dapr/config.yaml"
+      - "-resources-path"
+      - "/dapr/components"
+    volumes:
+      - ./dapr/config.yaml:/dapr/config.yaml:ro
+      - ./dapr/components:/dapr/components:ro
+      - dapr_certs:/certs:ro
+    depends_on:
+      - dapr-placement
+      - dapr-sentry
+    networks:
+      - dapr-net
+
+networks:
+  dapr-net:
+
+volumes:
+  dapr_certs:

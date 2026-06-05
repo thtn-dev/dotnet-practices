@@ -1,98 +1,21 @@
-using System.Net.Security;
-using System.Security.Claims;
-using System.Security.Cryptography.X509Certificates;
-using Microsoft.AspNetCore.Authentication.Certificate;
-using Microsoft.AspNetCore.Server.Kestrel.Https;
-
-var serverCertBytes = File.ReadAllBytes("../certs/service-b.pfx");
-var caCertBytes = File.ReadAllBytes("../certs/ca.crt");
-
-var serverCert = X509CertificateLoader.LoadPkcs12(serverCertBytes, "yourpassword");
-var caCert = X509CertificateLoader.LoadCertificate(caCertBytes);
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.WebHost.ConfigureKestrel(options =>
-{
-    options.ConfigureHttpsDefaults(httpsOptions =>
-    {
-        httpsOptions.ServerCertificate = serverCert;
-        httpsOptions.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
-        httpsOptions.ClientCertificateValidation = (cert, chain, errors) =>
-        {
-            if (errors != SslPolicyErrors.None &&
-                errors != SslPolicyErrors.RemoteCertificateChainErrors)
-                return false;
-
-            var chain2 = new X509Chain();
-            chain2.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
-            chain2.ChainPolicy.CustomTrustStore.Add(caCert);
-            chain2.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
-            return chain2.Build(new X509Certificate2(cert));
-        };
-    });
-});
-
+builder.AddServiceDefaults();
 builder.Services.AddOpenApi();
-builder.Services.AddCertificateForwarding(options => { });
-builder.Services.AddAuthentication(CertificateAuthenticationDefaults.AuthenticationScheme)
-    .AddCertificate(options =>
-    {
-        options.AllowedCertificateTypes = CertificateTypes.All;
-        options.RevocationMode = X509RevocationMode.NoCheck;
-        options.ChainTrustValidationMode = X509ChainTrustMode.CustomRootTrust;
-        options.CustomTrustStore.Add(caCert);
-        options.Events = new CertificateAuthenticationEvents
-        {
-            OnCertificateValidated = context =>
-            {
-                var cn = context.ClientCertificate.GetNameInfo(X509NameType.SimpleName, false);
-                var claims = new[]
-                {
-                    new Claim(ClaimTypes.Name, cn),
-                    new Claim(ClaimTypes.NameIdentifier, cn)
-                };
-                context.Principal = new ClaimsPrincipal(
-                    new ClaimsIdentity(claims, context.Scheme.Name));
-                context.Success();
-                return Task.CompletedTask;
-            }
-        };
-    });
-
-builder.Services.AddAuthorization();
-
-// ✅ HttpClient gọi ngược lại Service A — kèm cert service-b
-builder.Services.AddHttpClient("ServiceA", client =>
-{
-    client.BaseAddress = new Uri("https://localhost:7165"); // port Service A
-}).ConfigurePrimaryHttpMessageHandler(() =>
-{
-    var handler = new HttpClientHandler();
-    handler.ClientCertificates.Add(serverCert); // gửi cert service-b
-    handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) =>
-    {
-        if (cert == null) return false;
-        var customChain = new X509Chain();
-        customChain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
-        customChain.ChainPolicy.CustomTrustStore.Add(caCert);
-        customChain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
-        return customChain.Build(new X509Certificate2(cert));
-    };
-    return handler;
-});
+builder.Services.AddSingleton<DaprInvoker>();
 
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment()) app.MapOpenApi();
 
-app.UseHttpsRedirection();
-app.UseAuthentication();
-app.UseAuthorization();
 var summaries = new[]
 {
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
 };
+
+app.MapDefaultEndpoints();
 
 app.MapGet("/weatherforecast", () =>
 {
@@ -105,19 +28,45 @@ app.MapGet("/weatherforecast", () =>
     return forecast;
 }).WithName("GetWeatherForecast");
 
-// ✅ Endpoint nhận request từ Service A, gọi ngược /ping rồi trả về
-app.MapGet("/callback", async (IHttpClientFactory factory) =>
+app.MapGet("/callback", async (DaprInvoker dapr, CancellationToken cancellationToken) =>
 {
-    var client = factory.CreateClient("ServiceA");
-    var response = await client.GetAsync("/ping");
-    if (!response.IsSuccessStatusCode)
-        return Results.BadRequest("Failed to call Service A /ping");
+    var pingResult = await dapr.GetAsync("auth-service", "ping", cancellationToken);
 
-    var content = await response.Content.ReadAsStringAsync();
-    return Results.Ok(new { from = "service-b", pingResult = content });
+    return Results.Ok(new { from = "worker-service", pingResult });
 });
 
 app.Run();
+
+sealed class DaprInvoker
+{
+    private static readonly HttpClient Client = new() { Timeout = TimeSpan.FromSeconds(10) };
+
+    public async Task<JsonElement> GetAsync(string appId, string method, CancellationToken cancellationToken)
+    {
+        var daprEndpoint = ResolveDaprEndpoint();
+        var requestUri = $"{daprEndpoint}/v1.0/invoke/{Uri.EscapeDataString(appId)}/method/{method.TrimStart('/')}";
+
+        using var response = await Client.GetAsync(requestUri, cancellationToken);
+        var content = await response.Content.ReadAsStringAsync(cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        return JsonSerializer.Deserialize<JsonElement>(content);
+    }
+
+    private static string ResolveDaprEndpoint()
+    {
+        var endpoint = Environment.GetEnvironmentVariable("DAPR_HTTP_ENDPOINT");
+        if (!string.IsNullOrWhiteSpace(endpoint))
+        {
+            return endpoint.TrimEnd('/');
+        }
+
+        var port = Environment.GetEnvironmentVariable("DAPR_HTTP_PORT");
+        return string.IsNullOrWhiteSpace(port)
+            ? "http://127.0.0.1:3500"
+            : $"http://127.0.0.1:{port}";
+    }
+}
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {

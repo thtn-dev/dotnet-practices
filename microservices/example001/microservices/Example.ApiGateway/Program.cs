@@ -1,53 +1,69 @@
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
-
-var gatewayCertBytes = File.ReadAllBytes("../certs/service-a.pfx");
-var caCertBytes = File.ReadAllBytes("../certs/ca.crt");
-
-var gatewayCert = X509CertificateLoader.LoadPkcs12(gatewayCertBytes, "yourpassword");
-var caCert = X509CertificateLoader.LoadCertificate(caCertBytes);
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services
-    .AddReverseProxy()
-    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"))
-    .ConfigureHttpClient((context, handler) =>
-    {
-        handler.SslOptions.RemoteCertificateValidationCallback = (_, cert, _, errors) =>
-        {
-            if (cert is null) return false;
-            if (errors == SslPolicyErrors.None) return true;
-            if (errors.HasFlag(SslPolicyErrors.RemoteCertificateNotAvailable)) return false;
-
-            using var customChain = new X509Chain();
-            customChain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
-            customChain.ChainPolicy.CustomTrustStore.Add(caCert);
-            customChain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
-            return customChain.Build(new X509Certificate2(cert));
-        };
-
-        if (context.ClusterId is "auth-cluster" or "worker-cluster")
-        {
-            handler.SslOptions.ClientCertificates = new X509CertificateCollection
-            {
-                gatewayCert
-            };
-        }
-    });
+builder.AddServiceDefaults();
+builder.Services.AddSingleton<DaprInvoker>();
 
 var app = builder.Build();
+
+app.MapDefaultEndpoints();
 
 app.MapGet("/", () => Results.Ok(new
 {
     service = "Example.ApiGateway",
     routes = new[]
     {
-        "/auth/{**catch-all}",
-        "/worker/{**catch-all}"
+        "/auth/{**path}",
+        "/worker/{**path}"
     }
 }));
 
-app.MapReverseProxy();
+app.MapGet("/auth/{**path}", async (string path, DaprInvoker dapr, CancellationToken cancellationToken) =>
+{
+    var method = path.Trim('/');
+    var result = await dapr.GetAsync("auth-service", method, cancellationToken);
+
+    return Results.Json(result);
+});
+
+app.MapGet("/worker/{**path}", async (string path, DaprInvoker dapr, CancellationToken cancellationToken) =>
+{
+    var method = path.Trim('/');
+    var result = await dapr.GetAsync("worker-service", method, cancellationToken);
+
+    return Results.Json(result);
+});
 
 app.Run();
+
+sealed class DaprInvoker
+{
+    private static readonly HttpClient Client = new() { Timeout = TimeSpan.FromSeconds(10) };
+
+    public async Task<JsonElement> GetAsync(string appId, string method, CancellationToken cancellationToken)
+    {
+        var daprEndpoint = ResolveDaprEndpoint();
+        var requestUri = $"{daprEndpoint}/v1.0/invoke/{Uri.EscapeDataString(appId)}/method/{method.TrimStart('/')}";
+
+        using var response = await Client.GetAsync(requestUri, cancellationToken);
+        var content = await response.Content.ReadAsStringAsync(cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        return JsonSerializer.Deserialize<JsonElement>(content);
+    }
+
+    private static string ResolveDaprEndpoint()
+    {
+        var endpoint = Environment.GetEnvironmentVariable("DAPR_HTTP_ENDPOINT");
+        if (!string.IsNullOrWhiteSpace(endpoint))
+        {
+            return endpoint.TrimEnd('/');
+        }
+
+        var port = Environment.GetEnvironmentVariable("DAPR_HTTP_PORT");
+        return string.IsNullOrWhiteSpace(port)
+            ? "http://127.0.0.1:3500"
+            : $"http://127.0.0.1:{port}";
+    }
+}

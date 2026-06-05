@@ -1,113 +1,56 @@
-using Microsoft.AspNetCore.Authentication.Certificate;
-using Microsoft.AspNetCore.Server.Kestrel.Https;
-using System.Net.Security;
-using System.Security.Claims;
-using System.Security.Cryptography.X509Certificates;
-
-var clientCertBytes = File.ReadAllBytes("../certs/service-a.pfx");
-var caCertBytes = File.ReadAllBytes("../certs/ca.crt");
-
-var clientCert = X509CertificateLoader.LoadPkcs12(clientCertBytes, "yourpassword");
-var caCert = X509CertificateLoader.LoadCertificate(caCertBytes);
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.WebHost.ConfigureKestrel(options =>
-{
-    options.ConfigureHttpsDefaults(httpsOptions =>
-    {
-        httpsOptions.ServerCertificate = clientCert; // cert service-a
-        // AllowCertificate: có cert thì verify, không có thì vẫn cho qua
-        httpsOptions.ClientCertificateMode = ClientCertificateMode.AllowCertificate;
-        httpsOptions.ClientCertificateValidation = (cert, chain, errors) =>
-        {
-            if (errors == SslPolicyErrors.None) return true;
-            if (errors != SslPolicyErrors.RemoteCertificateChainErrors) return false;
 
-            var chain2 = new X509Chain();
-            chain2.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
-            chain2.ChainPolicy.CustomTrustStore.Add(caCert);
-            chain2.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
-            return chain2.Build(new X509Certificate2(cert));
-        };
-    });
-});
+builder.AddServiceDefaults();
 builder.Services.AddOpenApi();
-builder.Services.AddCertificateForwarding(options => { });
-builder.Services.AddAuthentication(CertificateAuthenticationDefaults.AuthenticationScheme)
-    .AddCertificate(options =>
-    {
-        options.AllowedCertificateTypes = CertificateTypes.All;
-        options.RevocationMode = X509RevocationMode.NoCheck;
-        options.ChainTrustValidationMode = X509ChainTrustMode.CustomRootTrust;
-        options.CustomTrustStore.Add(caCert);
-        options.Events = new CertificateAuthenticationEvents
-        {
-            OnCertificateValidated = context =>
-            {
-                var cn = context.ClientCertificate.GetNameInfo(X509NameType.SimpleName, false);
-                var claims = new[]
-                {
-                    new Claim(ClaimTypes.Name, cn),
-                    new Claim(ClaimTypes.NameIdentifier, cn)
-                };
-                context.Principal = new ClaimsPrincipal(
-                    new ClaimsIdentity(claims, context.Scheme.Name));
-                context.Success();
-                return Task.CompletedTask;
-            }
-        };
-    });
-builder.Services.AddAuthorization();
-
-
-// HttpClient gọi Service B — kèm cert
-builder.Services.AddHttpClient("ServiceB", client =>
-{
-    client.BaseAddress = new Uri("https://localhost:7217");
-}).ConfigurePrimaryHttpMessageHandler(() =>
-{
-    var handler = new HttpClientHandler();
-    handler.ClientCertificates.Add(clientCert);
-    handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) =>
-    {
-        if (cert == null) return false;
-        var customChain = new X509Chain();
-        customChain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
-        customChain.ChainPolicy.CustomTrustStore.Add(caCert);
-        customChain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
-        return customChain.Build(new X509Certificate2(cert));
-    };
-    return handler;
-});
+builder.Services.AddSingleton<DaprInvoker>();
 
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment()) app.MapOpenApi();
 
-app.UseHttpsRedirection();
-app.UseAuthentication();
-app.UseAuthorization();
+app.MapDefaultEndpoints();
 
-// ✅ Browser gọi — không cần cert
-// Service A gọi Service B rồi trả kết quả về browser
-app.MapGet("/test", async (IHttpClientFactory factory) =>
+app.MapGet("/test", async (DaprInvoker dapr, CancellationToken cancellationToken) =>
 {
-    var client = factory.CreateClient("ServiceB");
-    var response = await client.GetAsync("/callback");
-    if (!response.IsSuccessStatusCode)
-        return Results.BadRequest("Failed to call Service B");
+    var result = await dapr.GetAsync("worker-service", "callback", cancellationToken);
 
-    var content = await response.Content.ReadAsByteArrayAsync();
-    var json = System.Text.Json.JsonSerializer.Deserialize<object>(content);
-    return Results.Ok(json);
+    return Results.Ok(result);
 });
 
-// ✅ Service B gọi vào đây — yêu cầu cert hợp lệ
-app.MapGet("/ping", (HttpContext httpContext) =>
-{
-    // Lấy identity từ cert — biết đây là service-b
-    var caller = httpContext.User.Identity?.Name ?? "unknown";
-    return Results.Ok(new { message = $"Pong from Service A, called by {caller}" });
-}).RequireAuthorization(); // ← chỉ cho phép nếu có cert hợp lệ
+app.MapGet("/ping", () =>
+    Results.Ok(new { message = "Pong from Service A" }));
 
 app.Run();
+
+sealed class DaprInvoker
+{
+    private static readonly HttpClient Client = new() { Timeout = TimeSpan.FromSeconds(10) };
+
+    public async Task<JsonElement> GetAsync(string appId, string method, CancellationToken cancellationToken)
+    {
+        var daprEndpoint = ResolveDaprEndpoint();
+        var requestUri = $"{daprEndpoint}/v1.0/invoke/{Uri.EscapeDataString(appId)}/method/{method.TrimStart('/')}";
+
+        using var response = await Client.GetAsync(requestUri, cancellationToken);
+        var content = await response.Content.ReadAsStringAsync(cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        return JsonSerializer.Deserialize<JsonElement>(content);
+    }
+
+    private static string ResolveDaprEndpoint()
+    {
+        var endpoint = Environment.GetEnvironmentVariable("DAPR_HTTP_ENDPOINT");
+        if (!string.IsNullOrWhiteSpace(endpoint))
+        {
+            return endpoint.TrimEnd('/');
+        }
+
+        var port = Environment.GetEnvironmentVariable("DAPR_HTTP_PORT");
+        return string.IsNullOrWhiteSpace(port)
+            ? "http://127.0.0.1:3500"
+            : $"http://127.0.0.1:{port}";
+    }
+}

@@ -1,6 +1,11 @@
 @Example.AuthService_HostAddress = http://localhost:5100
 
-GET {{Example.AuthService_HostAddress}}/weatherforecast/
+GET {{Example.AuthService_HostAddress}}/test
+Accept: application/json
+
+###
+
+GET {{Example.AuthService_HostAddress}}/ping
 Accept: application/json
 
 ###

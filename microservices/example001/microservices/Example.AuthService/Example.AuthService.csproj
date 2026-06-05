@@ -7,8 +7,12 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Dapr.AspNetCore" Version="1.15.4" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7"/>
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.Certificate" Version="10.0.8" />
-	</ItemGroup>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\microservices.ServiceDefaults\microservices.ServiceDefaults.csproj" />
+    </ItemGroup>
 
 </Project>
