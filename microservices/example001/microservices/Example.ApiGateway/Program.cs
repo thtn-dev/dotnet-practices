@@ -18,7 +18,7 @@ builder.Services
         {
             if (cert is null) return false;
             if (errors == SslPolicyErrors.None) return true;
-            if (errors != SslPolicyErrors.RemoteCertificateChainErrors) return false;
+            if (errors.HasFlag(SslPolicyErrors.RemoteCertificateNotAvailable)) return false;
 
             using var customChain = new X509Chain();
             customChain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
