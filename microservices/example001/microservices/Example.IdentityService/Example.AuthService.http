@@ -1,0 +1,26 @@
+@Example.AuthService_HostAddress = http://localhost:5100
+
+GET {{Example.AuthService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
+@Example_IdentityService_HostAddress = https://localhost:7165
+
+### Health check
+GET {{Example_IdentityService_HostAddress}}/ping
+
+### Token using ASP.NET Identity user
+POST {{Example_IdentityService_HostAddress}}/connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id=example-client&client_secret=example-secret&username=admin&password=Pass123$&scope=api
+
+### Token using client credentials
+POST {{Example_IdentityService_HostAddress}}/connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&client_id=example-client&client_secret=example-secret&scope=api
+
+### Protected endpoint (paste access_token from either request)
+GET {{Example_IdentityService_HostAddress}}/api/me
+Authorization: Bearer {{access_token}}

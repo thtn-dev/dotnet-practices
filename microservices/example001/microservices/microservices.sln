@@ -1,10 +1,16 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example.AuthService", "Example.AuthService\Example.AuthService.csproj", "{8DFD1DA0-7535-43EB-B390-CFF25FACA9F0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example.IdentityService", "Example.IdentityService\Example.IdentityService.csproj", "{8DFD1DA0-7535-43EB-B390-CFF25FACA9F0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example.WorkerService", "Example.WorkerService\Example.WorkerService.csproj", "{923CF3DE-56A7-4387-84E4-FDCD36F75E03}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example.ApiGateway", "Example.ApiGateway\Example.ApiGateway.csproj", "{AFB91DD2-CCBF-4C10-80ED-FC895E51CD2A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "microservices.AppHost", "microservices.AppHost\microservices.AppHost.csproj", "{10CA76C2-6AE3-4FE6-8C39-6C42BAAD796A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "microservices.ServiceDefaults", "microservices.ServiceDefaults\microservices.ServiceDefaults.csproj", "{8F65DC2F-98EF-4B78-B1AD-587362AAEC76}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{6102E9E2-773D-4D10-B13F-011930503EC1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,6 +30,14 @@ Global
 		{AFB91DD2-CCBF-4C10-80ED-FC895E51CD2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AFB91DD2-CCBF-4C10-80ED-FC895E51CD2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AFB91DD2-CCBF-4C10-80ED-FC895E51CD2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{10CA76C2-6AE3-4FE6-8C39-6C42BAAD796A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10CA76C2-6AE3-4FE6-8C39-6C42BAAD796A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10CA76C2-6AE3-4FE6-8C39-6C42BAAD796A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10CA76C2-6AE3-4FE6-8C39-6C42BAAD796A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F65DC2F-98EF-4B78-B1AD-587362AAEC76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F65DC2F-98EF-4B78-B1AD-587362AAEC76}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F65DC2F-98EF-4B78-B1AD-587362AAEC76}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F65DC2F-98EF-4B78-B1AD-587362AAEC76}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

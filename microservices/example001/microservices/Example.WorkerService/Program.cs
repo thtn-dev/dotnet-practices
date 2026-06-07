@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Server.Kestrel.Https;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddServiceDefaults();
+
 builder.Services.AddOpenApi();
 builder.Services.AddCertificateForwarding(options => { });
 builder.Services.AddAuthentication();
@@ -18,6 +20,8 @@ builder.Services.AddHttpClient("ServiceA", client =>
 });
 
 var app = builder.Build();
+
+app.MapDefaultEndpoints();
 
 if (app.Environment.IsDevelopment()) app.MapOpenApi();
 
