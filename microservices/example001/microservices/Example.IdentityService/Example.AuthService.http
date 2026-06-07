@@ -13,13 +13,21 @@ GET {{Example_IdentityService_HostAddress}}/ping
 POST {{Example_IdentityService_HostAddress}}/connect/token
 Content-Type: application/x-www-form-urlencoded
 
-grant_type=password&client_id=example-client&client_secret=example-secret&username=admin&password=Pass123$&scope=api
+grant_type = password &
+client_id = example-client &
+client_secret = example-secret &
+username = admin &
+password = Pass123$ &
+scope = api
 
 ### Token using client credentials
 POST {{Example_IdentityService_HostAddress}}/connect/token
 Content-Type: application/x-www-form-urlencoded
 
-grant_type=client_credentials&client_id=example-client&client_secret=example-secret&scope=api
+grant_type = client_credentials &
+client_id = example-client &
+client_secret = example-secret &
+scope = api
 
 ### Protected endpoint (paste access_token from either request)
 GET {{Example_IdentityService_HostAddress}}/api/me

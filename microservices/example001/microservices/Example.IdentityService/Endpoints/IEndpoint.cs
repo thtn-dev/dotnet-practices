@@ -8,7 +8,7 @@ namespace Example.IdentityService.Endpoints;
 public interface IEndpoint
 {
     /// <summary>
-    ///    Map the endpoint to the application's routing system.
+    ///     Map the endpoint to the application's routing system.
     /// </summary>
     /// <param name="app"></param>
     void MapEndpoint(WebApplication app);
